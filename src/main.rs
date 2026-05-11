@@ -15,9 +15,9 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::{
-    state::app_state::AppState,
-    handlers::api_handler::{home, get_buckets},
-    middleware::rate_limit::rate_limit,
+    handlers::api_handler::{get_buckets, home, protected}, 
+    middleware::rate_limit::rate_limit, 
+    state::app_state::AppState
 };
 
 #[tokio::main]
@@ -26,8 +26,9 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(home))
-        .route("/buckets", get(get_buckets))
+        .route("/protected", get(protected))
         .route_layer(from_fn_with_state(state.clone(), rate_limit))
+        .route("/buckets", get(get_buckets))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
