@@ -1,3 +1,8 @@
-pub struct Client{
+
+
+/* 
+struct Client{
     id: String
 }
+
+    */
