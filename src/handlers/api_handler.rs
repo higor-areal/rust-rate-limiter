@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use tokio::sync::Mutex;
 
 use axum::{
-    Json, extract::State, http::{HeaderMap, StatusCode}, response::{Response, IntoResponse}
+    Json, extract::State, http::{HeaderMap, StatusCode},
 };
 
 use crate::{
@@ -36,26 +36,27 @@ pub async fn get_buckets(State(state): State<Arc<Mutex<AppState>>>) -> Json<Hash
 pub async fn stats(
     State(state): State<Arc<Mutex<AppState>>>,
     header: HeaderMap,
-) -> Response {
+) -> Result<Json<Bucket>, Json<ErrorResponse>> {
     let token = match get_token(&header) {
         Some(t) => t,
         None => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                "Unauthorized: Missing token",
-            )
-                .into_response();
+            return Err(Json(ErrorResponse {
+                status_code: 400,
+                message: "Missing token".to_string(),
+            }));
         }
     };
 
-    let mut data = state.lock().await;
+    let data = state.lock().await;
 
-    let bucket = data
-        .buckets
-        .entry(token)
-        .or_insert_with(|| Bucket::new(10.0, 0.5));
-
-    Json(bucket.clone()).into_response()
+    if let Some(value) = data.buckets.get(&token) {
+        Ok(Json(value.clone()))
+    } else {
+        Err(Json(ErrorResponse {
+            status_code: 400,
+            message: "Bucket not found".to_string(),
+        }))
+    }
 }
 
 pub async fn reset(
