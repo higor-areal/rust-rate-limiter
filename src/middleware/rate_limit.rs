@@ -43,7 +43,7 @@ pub async fn rate_limit(
 }
 
 
-fn get_token(headers: &HeaderMap) -> Option<String> {
+pub fn get_token(headers: &HeaderMap) -> Option<String> {
     let auth_header = headers
         .get("authorization")?
         .to_str()
