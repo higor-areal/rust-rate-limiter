@@ -24,7 +24,7 @@ pub async fn home() -> Json<Value>{
 }
 
 pub async fn protected() -> Result<Json<SuccessResponse>, Json<ErrorResponse>>{
-    handle_response (  201, "request allowed".to_string() ) 
+    handle_response (  StatusCode::OK, "request allowed".to_string() ) 
 }
 
 pub async fn get_buckets(State(state): State<Arc<Mutex<AppState>>>) -> Json<HashMap<String, Bucket>> {
@@ -56,4 +56,25 @@ pub async fn stats(
         .or_insert_with(|| Bucket::new(10.0, 0.5));
 
     Json(bucket.clone()).into_response()
+}
+
+pub async fn reset(
+    State(state): State<Arc<Mutex<AppState>>>,
+    header: HeaderMap,
+) -> Result<Json<SuccessResponse>, Json<ErrorResponse>> {
+    let token = match get_token(&header) {
+        Some(t) => t,
+        None => {
+            return handle_response(StatusCode::UNAUTHORIZED, "Missing token".to_string())
+        }
+    };
+
+    let mut data = state.lock().await;
+
+    if let Some(value) = data.buckets.remove_entry(&token){
+        handle_response(StatusCode::OK, "bucket reset".to_string())
+    } else {
+        handle_response(StatusCode::BAD_REQUEST, "Missing token".to_string())
+    }
+    
 }
