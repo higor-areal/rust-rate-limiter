@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use tokio::sync::Mutex;
 
 use axum::{
-    Json, extract::State, handler, http::{HeaderMap, header, StatusCode}, response::{Response, IntoResponse}
+    Json, extract::State, http::{HeaderMap, StatusCode}, response::{Response, IntoResponse}
 };
 
 use crate::{
@@ -71,7 +71,7 @@ pub async fn reset(
 
     let mut data = state.lock().await;
 
-    if let Some(value) = data.buckets.remove_entry(&token){
+    if let Some(_value) = data.buckets.remove_entry(&token){
         handle_response(StatusCode::OK, "bucket reset".to_string())
     } else {
         handle_response(StatusCode::BAD_REQUEST, "Missing token".to_string())
